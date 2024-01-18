@@ -8,6 +8,7 @@ import (
 )
 
 type Entry struct {
+	Word       string `json:"word"`
 	Definition string `json:"definition"`
 }
 
@@ -21,12 +22,16 @@ func NewDictionary() *Dictionary {
 		entries: make(map[string]Entry),
 	}
 }
-
-func (d *Dictionary) Add(word string, definition string) {
+func (d *Dictionary) Add(word string, definition string) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
+	if len(word) < 3 || len(definition) < 5 {
+		return errors.New("Les données ne respectent pas les règles de validation")
+	}
+
 	d.entries[word] = Entry{Definition: definition}
+	return nil
 }
 
 func (d *Dictionary) Get(word string) (Entry, error) {
