@@ -49,25 +49,43 @@ func main() {
 
 	router := mux.NewRouter()
 	port := ":8080"
+	router.Use(gestionnaireErreur)
+
+	router.HandleFunc("/accueil", GetDefinition).Methods("GET")
+
+	router.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
+		listerEntrees(dict, w, r)
+	}).Methods("GET")
+
+	router.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
+		ajouterEntree(dict, w, r)
+	}).Methods("POST")
+
+	router.HandleFunc("/definir/{word}", func(w http.ResponseWriter, r *http.Request) {
+		definirEntree(dict, w, r)
+	}).Methods("GET")
+
+	router.HandleFunc("/retirer/{word}", func(w http.ResponseWriter, r *http.Request) {
+		supprimerEntree(dict, w, r)
+	}).Methods("DELETE")
+
+	http.Handle("/", router)
 
 	fmt.Printf("Serveur écoutant sur le port %s...\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 
-	router.Use(gestionnaireErreur)
-
-	router.HandleFunc("/api/{word}", GetDefinition).Methods("GET")
+	//router.HandleFunc("/api/{word}", GetDefinition).Methods("GET")
 
 }
 
 func GetDefinition(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Fprintf(w, "Hello, World!")
-	params := mux.Vars(r)
-	word := params["word"]
+	// Écrivez une réponse simple
+	w.WriteHeader(http.StatusOK)                // Code de statut HTTP 200 (OK)
+	w.Header().Set("Content-Type", "text/html") // Type de contenu HTML
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Word : %s", word)
-
+	message := "<html><body><h3>Bienvenue sur ma page web</h3></body></html>"
+	fmt.Fprintf(w, message)
 	/*entry, err := dictionary.NewDictionary().Get(word)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -158,6 +176,17 @@ func listerEntrees(dict *dictionary.Dictionary, w http.ResponseWriter, r *http.R
 
 	entrees := dict.List()
 	fmt.Println("Liste des entrées du dictionary :", entrees)
+	//json.NewEncoder(w).Encode(entrees)
 
-	json.NewEncoder(w).Encode(entrees)
+	var message string
+
+	message += "<html><body><h3>listerEntrees</h3></body></html>"
+	for mot, entree := range entrees {
+		message += fmt.Sprintf("Mot : %s, Définition : %s\n", mot, entree.Definition)
+	}
+
+	w.WriteHeader(http.StatusOK)                // Code de statut HTTP 200 (OK)
+	w.Header().Set("Content-Type", "text/html") // Type de contenu HTML
+
+	fmt.Fprintf(w, message)
 }
