@@ -52,6 +52,8 @@ func main() {
 	fmt.Printf("Serveur écoutant sur le port %s...\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 
+	router.Use(gestionnaireErreur)
+
 	router.HandleFunc("/api/{word}", GetDefinition).Methods("GET")
 
 }
