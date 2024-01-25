@@ -113,27 +113,26 @@ func gestionnaireErreur(suivant http.Handler) http.Handler {
 
 func ajouterEntree(dict *dictionary.Dictionary, w http.ResponseWriter, r *http.Request) {
 	var entree dictionary.Entry
-	err := json.NewDecoder(r.Body).Decode(&entree)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&entree); err != nil {
 		http.Error(w, "Erreur de décodage JSON", http.StatusBadRequest)
 		log.Println("Erreur de décodage JSON :", err)
 		return
 	}
 
-	if len(entree.Definition) < 3 || len(entree.Definition) < 5 {
+	if len(entree.Word) < 3 || len(entree.Definition) < 5 {
 		http.Error(w, "Les données ne respectent pas les règles de validation", http.StatusBadRequest)
 		log.Println("Erreur de validation des données")
 		return
 	}
 
-	err = dict.Add(entree.Word, entree.Definition)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := dict.Add(entree.Word, entree.Definition); err != nil {
+		http.Error(w, "Erreur lors de l'ajout de l'entrée", http.StatusInternalServerError)
 		log.Println("Erreur lors de l'ajout de l'entrée :", err)
 		return
 	}
 
 	reponse := map[string]string{"message": "Entrée ajoutée avec succès"}
+	w.WriteHeader(http.StatusCreated) // Code de statut HTTP 201 (Created)
 	json.NewEncoder(w).Encode(reponse)
 }
 
